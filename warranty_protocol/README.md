@@ -1,30 +1,56 @@
-# Warranty on Chain - Smart Contract
+# Warranty on Chain - Smart Contracts
 
-Decentralized escrow system with **Partial Settlement** feature on Sui blockchain.
+Decentralized escrow system with **Partial Settlement** on Sui blockchain.
 
-## 📦 Deployed Addresses (Testnet)
+## Deployed Addresses (Testnet)
 
-| Object | Address |
-|--------|---------|
-| **Package ID** | `0xbf20685a067656c10214bd81e2297a6871cb472a5462f43367c946e4f65e6418` |
-| **TreasuryCap (USDC)** | `0xc26c0b361ccf368bda4a94f6ad08a5bfc657bc5d09a408c27989174b7f18447b` |
-| **CoinMetadata (USDC)** | `0x6652bae8c6fd7b9a24131dd457be184f105135f3f94447ecbb6542e904afa2a6` |
-| **Display Object** | `0x27cad91f2c3df0db3466554ce8c420cdd9e044b44f92e0d4ca02dd62ff048113` |
-| **UpgradeCap** | `0x7505fe3e8353232550246a1a159cd45982c1a00558c8d7bd884a740f60b211c2` |
-| **Publisher** | `0xfdb686a87fafd1ced735ccfed36dfe43826a403ae4e4a5c8f17853bc06cc8cd1` |
+| Object | ID |
+|--------|-----|
+| **Package ID** | `0x6ac00a50e819911c2f64e8107f8ba16c76d3f234b3fc2509daf6214d0432d2c5` |
+| **MintCap (Shared)** | `0xe84e4fc4797253aa576c21d6e9b2ae6a68cb345e107b9a3ef021d0c4f203e94d` |
+| **CoinMetadata** | `0xc1133e066989d6b68629ebe6b98f2a114cb89f780fc51c1ea5cee69bc7c295b9` |
 
-## 🔧 Type Definitions
+## Type Definitions
 
 ```
-MOCK_USDC: 0xbf20685a067656c10214bd81e2297a6871cb472a5462f43367c946e4f65e6418::mock_usdc::MOCK_USDC
-WarrantyItem: 0xbf20685a067656c10214bd81e2297a6871cb472a5462f43367c946e4f65e6418::marketplace::WarrantyItem<T>
+MOCK_USDC: 0x6ac00a50e819911c2f64e8107f8ba16c76d3f234b3fc2509daf6214d0432d2c5::mock_usdc::MOCK_USDC
+WarrantyItem<T>: 0x6ac00a50e819911c2f64e8107f8ba16c76d3f234b3fc2509daf6214d0432d2c5::marketplace::WarrantyItem<T>
 ```
 
-## 📝 Modules
+## Modules
 
-- `marketplace` - Main escrow logic (create_item, lock_funds, finalize_and_split)
-- `mock_usdc` - Test token with mint function
+### `marketplace`
+- `create_item<T>` - Create a new WarrantyItem NFT
+- `lock_funds<T>` - Buyer locks payment
+- `finalize_and_split<T>` - Buyer settles with optional partial refund
 
-## 🔗 Explorer
+### `mock_usdc`
+- `faucet` - **Anyone** can mint USDC to themselves
+- `mint` - **Anyone** can mint USDC to any address
 
-[View on Sui Explorer](https://suiscan.xyz/testnet/object/0xbf20685a067656c10214bd81e2297a6871cb472a5462f43367c946e4f65e6418)
+## Usage Examples
+
+### Mint Test USDC (Faucet)
+```bash
+sui client call \
+  --package 0x6ac00a50e819911c2f64e8107f8ba16c76d3f234b3fc2509daf6214d0432d2c5 \
+  --module mock_usdc \
+  --function faucet \
+  --args 0xe84e4fc4797253aa576c21d6e9b2ae6a68cb345e107b9a3ef021d0c4f203e94d 100000000 \
+  --gas-budget 10000000
+```
+
+### Create Listing
+```bash
+sui client call \
+  --package 0x6ac00a50e819911c2f64e8107f8ba16c76d3f234b3fc2509daf6214d0432d2c5 \
+  --module marketplace \
+  --function create_item \
+  --type-args 0x6ac00a50e819911c2f64e8107f8ba16c76d3f234b3fc2509daf6214d0432d2c5::mock_usdc::MOCK_USDC \
+  --args "MacBook Pro M2" "Excellent condition" "https://example.com/image.jpg" 100000000 \
+  --gas-budget 10000000
+```
+
+## Explorer
+
+[View on Suiscan](https://suiscan.xyz/testnet/object/0x6ac00a50e819911c2f64e8107f8ba16c76d3f234b3fc2509daf6214d0432d2c5)

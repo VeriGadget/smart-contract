@@ -1,15 +1,21 @@
 /// Module: warranty_protocol::mock_usdc
 /// 
 /// A mock USDC token for testing the escrow system on testnet.
-/// This allows users to mint test tokens for transactions.
+/// This allows ANY user to mint test tokens for transactions (faucet-style).
 module warranty_protocol::mock_usdc {
     use sui::coin::{Self, TreasuryCap};
 
     /// One-Time Witness for creating the MOCK_USDC coin type
     public struct MOCK_USDC has drop {}
 
+    /// Shared wrapper for TreasuryCap so anyone can mint
+    public struct MintCap has key {
+        id: UID,
+        treasury_cap: TreasuryCap<MOCK_USDC>,
+    }
+
     /// Initialize the MOCK_USDC coin type with standard USDC-like metadata.
-    /// TreasuryCap is transferred to the deployer for minting.
+    /// TreasuryCap is wrapped and shared so anyone can mint.
     fun init(witness: MOCK_USDC, ctx: &mut TxContext) {
         let (treasury_cap, metadata) = coin::create_currency<MOCK_USDC>(
             witness,
@@ -24,21 +30,38 @@ module warranty_protocol::mock_usdc {
         // Freeze metadata - it won't change
         transfer::public_freeze_object(metadata);
         
-        // Transfer TreasuryCap to deployer for minting
-        transfer::public_transfer(treasury_cap, ctx.sender());
+        // Wrap TreasuryCap and share it so anyone can mint
+        let mint_cap = MintCap {
+            id: object::new(ctx),
+            treasury_cap,
+        };
+        transfer::share_object(mint_cap);
+    }
+
+    /// Public faucet function - ANYONE can mint MOCK_USDC tokens.
+    /// Mints to the caller's address.
+    /// 
+    /// Example: To mint 100 USDC (6 decimals), pass amount = 100_000_000
+    public entry fun faucet(
+        mint_cap: &mut MintCap,
+        amount: u64,
+        ctx: &mut TxContext
+    ) {
+        let coin = coin::mint(&mut mint_cap.treasury_cap, amount, ctx);
+        transfer::public_transfer(coin, ctx.sender());
     }
 
     /// Mint MOCK_USDC tokens to a specified recipient.
-    /// Only the holder of TreasuryCap can mint.
+    /// Anyone can call this function.
     /// 
     /// Example: To mint 100 USDC (6 decimals), pass amount = 100_000_000
     public entry fun mint(
-        treasury_cap: &mut TreasuryCap<MOCK_USDC>,
+        mint_cap: &mut MintCap,
         amount: u64,
         recipient: address,
         ctx: &mut TxContext
     ) {
-        let coin = coin::mint(treasury_cap, amount, ctx);
+        let coin = coin::mint(&mut mint_cap.treasury_cap, amount, ctx);
         transfer::public_transfer(coin, recipient);
     }
 }
